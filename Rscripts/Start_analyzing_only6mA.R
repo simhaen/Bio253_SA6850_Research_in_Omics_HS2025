@@ -24,7 +24,7 @@ desc <- "Prepare"
 
 
 # read in the data
-prX <- readRDS("../resources/SA6850_prXallWide_moreMetaInfo.rds")
+prX <- readRDS("../resources/SA6850_prXallWide_moreMetaInfo.rds") ### Please be aware that you may need to change the directory (i.e. ../resources/) if you have manually downloaded this repo
 mtX <- readRDS("../resources/methylation_data_EGGnogAnnotated.rds")
 
 # biocyc table here all genes are listed from left to rigth - no matter if + or - strand
@@ -327,6 +327,8 @@ mygffdf_slim_protein <- mygffdf %>%
 # find genes in regions of peaks and gaps for StringDB enrichment?
 
 # In peak regions
+
+source("../Rscripts/HelperFunctions.R")
 my_top_10_bins <- methylation_binned_condition[order(methylation_binned_condition$TSBnPASN, decreasing = TRUE)[1:10],]
 features_in_top10_bins_protein <- find_overlapping_features(my_top_10_bins, mygffdf_slim_protein)
 features_in_top10_bins_genes <- find_overlapping_features(my_top_10_bins, mygffdf_slim_gene)
@@ -336,6 +338,11 @@ features_in_top10_bins_genes <- find_overlapping_features(my_top_10_bins, mygffd
 
 # spacing regions of interest
 SpacingCutoff <- 10000  # 10kb
+
+methylation_withDiffs <- methylation_data_with_diff %>%
+    arrange(desc(diff)) %>%
+    mutate(hypoMethRegion_end = start + diff)
+
 largest_diff_AllStrand_ofInterest <- methylation_withDiffs %>%
     filter(diff > SpacingCutoff) %>%
     select(start, hypoMethRegion_end, diff, strand, feature)
