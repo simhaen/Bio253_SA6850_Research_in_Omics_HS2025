@@ -104,8 +104,9 @@ genome_length
 
 
 # CHANGE THIS TO YOUR DESIRED MOTIF:
-# motif_pattern <- "RVANNNNNNNTBY"
-motif_pattern <- "ANNNNNNNT"
+motif_pattern <- "RVANNNNNNNTBY"
+# motif_pattern <- "ANNNNNNNT"
+# motif_pattern <- "RNANNNNNNTNC"
 
 # For your second analysis, change it to:
 # motif_pattern <- "RVANNNNNNTHC"
@@ -115,7 +116,7 @@ motif_pattern <- "ANNNNNNNT"
 # For ANNNNNNT, if methylation is on the A, set to 1
 # If it's after 4 bases, set to 4, etc.
 # methylation_offset <- 3  # Adjust based on your motif
-methylation_offset <- 1  # Adjust based on your motif
+methylation_offset <- 3  # Adjust based on your motif
 
 # Matching tolerance for position matching (bp)
 position_tolerance <- 0
@@ -329,7 +330,7 @@ if (total_motifs > 0 && methylated_motifs > 0) {
                                       label = after_stat(count)),
                   position = position_fill(vjust = 0.5))
 
-    fN <- paste(project,"_",desc,"_",motif_pattern, "_methylation_coverage_by_strand.png", sep="")
+    fN <- paste(motif_pattern, "_", project,"_",desc, "_methylation_coverage_by_strand.png", sep="")
     ggsave(fN, p1, width = 8, height = 6, dpi = 300)
     print(p1)
 
@@ -351,7 +352,7 @@ if (total_motifs > 0 && methylated_motifs > 0) {
               panel.grid.minor.y = element_blank()) +
         scale_x_continuous(labels = scales::comma)
 
-    fN <- paste(project,"_",desc,"_",motif_pattern, "_motif_distribution_genome.png", sep="")
+    fN <- paste(motif_pattern, "_", project,"_",desc, "_motif_distribution_genome.png", sep="")
     ggsave(fN, p2, width = 14, height = 6, dpi = 300)
     print(p2)
 
@@ -378,7 +379,7 @@ if (total_motifs > 0 && methylated_motifs > 0) {
               legend.position = "none") +
         ylim(0, max(count_data$Count) * 1.15)
 
-    fN <- paste(project,"_",desc,"_",motif_pattern, "_methylation_counts.png", sep="")
+    fN <- paste(motif_pattern, "_", project,"_",desc, "_methylation_counts.png", sep="")
     ggsave(fN, p3, width = 8, height = 6, dpi = 300)
     print(p3)
 
@@ -398,7 +399,7 @@ if (total_motifs > 0 && methylated_motifs > 0) {
             theme_minimal() +
             theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
 
-        fN <- paste(project,"_",desc,"_",motif_pattern, "_sequence_variants.png", sep="")
+        fN <- paste(motif_pattern, "_", project,"_",desc, "_sequence_variants.png", sep="")
         ggsave(fN, p4, width = 10, height = 8, dpi = 300)
         print(p4)
     }
@@ -422,65 +423,64 @@ if (total_motifs > 0 && methylated_motifs > 0) {
 
     # Calculate bin width for histogram (adjust this for your genome size)
     # For a ~3Mb genome, 5kb bins give good resolution
-    bin_width <- 5000
+    bin_width <- 2000
 
     # Create density overlay for + strand using histograms for high resolution
+    # + Strand Density Overlay
     p5 <- ggplot() +
-        # Motif histogram (background)
-        geom_histogram(data = motif_plus,
-                       aes(x = position, y = after_stat(count),
-                           fill = "Motif occurrences"),
-                       alpha = 0.4, binwidth = bin_width, position = "identity") +
-        # Methylation histogram (foreground)
-        geom_histogram(data = meth_plus,
-                       aes(x = start, y = after_stat(count),
-                           fill = "Methylation marks"),
-                       alpha = 0.6, binwidth = bin_width, position = "identity") +
+        geom_density(data = motif_plus,
+                     aes(x = position, fill = "Motif occurrences"),
+                     alpha = 0.4, adjust = 0.001) +
+        geom_density(data = meth_plus,
+                     aes(x = start, fill = "Methylation marks"),
+                     alpha = 0.6, adjust = 0.001) +
         scale_fill_manual(values = c("Motif occurrences" = "#3498DB",
                                      "Methylation marks" = "#27AE60"),
                           name = "Feature") +
         labs(title = "Density Distribution: + Strand",
-             subtitle = paste0("Motif: ", motif_pattern, " (", bin_width/1000, "kb bins)"),
-             x = "Genomic Position (bp)",
-             y = "Count per bin") +
+             subtitle = paste0("Motif: ", motif_pattern, " (density overlay, adjust=1.2)"),
+             x = "Genomic Position (bp)", y = "Density") +
         theme_minimal() +
         theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
               plot.subtitle = element_text(hjust = 0.5, size = 11),
               legend.position = "top") +
         scale_x_continuous(labels = scales::comma)
 
-    fN <- paste(project,"_",desc,"_",motif_pattern, "_density_overlay_plus_strand.png", sep="")
+    fN <- paste(motif_pattern, "_", project,"_",desc, "_density_overlay_plus_strand.png", sep="")
     ggsave(fN, p5, width = 14, height = 6, dpi = 300)
     print(p5)
 
     # Create density overlay for - strand using histograms
+    # - Strand Density Overlay
     p6 <- ggplot() +
-        # Motif histogram (background)
-        geom_histogram(data = motif_minus,
-                       aes(x = position, y = after_stat(count),
-                           fill = "Motif occurrences"),
-                       alpha = 0.4, binwidth = bin_width, position = "identity") +
-        # Methylation histogram (foreground)
-        geom_histogram(data = meth_minus,
-                       aes(x = start, y = after_stat(count),
-                           fill = "Methylation marks"),
-                       alpha = 0.6, binwidth = bin_width, position = "identity") +
+        geom_density(data = motif_minus,
+                     aes(x = position, fill = "Motif occurrences"),
+                     alpha = 0.4, adjust = 0.001) +
+        geom_density(data = meth_minus,
+                     aes(x = start, fill = "Methylation marks"),
+                     alpha = 0.6, adjust = 0.001) +
         scale_fill_manual(values = c("Motif occurrences" = "#3498DB",
                                      "Methylation marks" = "#E74C3C"),
                           name = "Feature") +
         labs(title = "Density Distribution: - Strand",
-             subtitle = paste0("Motif: ", motif_pattern, " (", bin_width/1000, "kb bins)"),
-             x = "Genomic Position (bp)",
-             y = "Count per bin") +
+             subtitle = paste0("Motif: ", motif_pattern, " (density overlay, adjust=1.2)"),
+             x = "Genomic Position (bp)", y = "Density") +
         theme_minimal() +
         theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
               plot.subtitle = element_text(hjust = 0.5, size = 11),
               legend.position = "top") +
         scale_x_continuous(labels = scales::comma)
 
-    fN <- paste(project,"_",desc,"_",motif_pattern, "_density_overlay_minus_strand.png", sep="")
+    fN <- paste(motif_pattern, "_", project,"_",desc, "_density_overlay_minus_strand.png", sep="")
     ggsave(fN, p6, width = 14, height = 6, dpi = 300)
     print(p6)
+
+    # Combined Density Overlay Both Strands
+    motif_all_labeled <- all_motifs %>%
+        mutate(type = "Motif occurrences")
+    meth_all_labeled <- meth_data %>%
+        rename(position = start) %>%
+        mutate(type = "Methylation marks")
 
     # Combined density plot (both strands) using histograms
     # Prepare combined data
@@ -491,29 +491,26 @@ if (total_motifs > 0 && methylated_motifs > 0) {
         mutate(type = "Methylation marks")
 
     p7 <- ggplot() +
-        geom_histogram(data = motif_all_labeled,
-                       aes(x = position, y = after_stat(count),
-                           fill = type),
-                       alpha = 0.4, binwidth = bin_width, position = "identity") +
-        geom_histogram(data = meth_all_labeled,
-                       aes(x = position, y = after_stat(count),
-                           fill = type),
-                       alpha = 0.6, binwidth = bin_width, position = "identity") +
+        geom_density(data = motif_all_labeled,
+                     aes(x = position, fill = type),
+                     alpha = 0.4, adjust = 0.001) +
+        geom_density(data = meth_all_labeled,
+                     aes(x = position, fill = type),
+                     alpha = 0.6, adjust = 0.001) +
         facet_wrap(~strand, ncol = 1) +
         scale_fill_manual(values = c("Motif occurrences" = "#3498DB",
                                      "Methylation marks" = "#9B59B6"),
                           name = "Feature") +
         labs(title = "Density Distribution: Both Strands",
-             subtitle = paste0("Motif: ", motif_pattern, " (", bin_width/1000, "kb bins)"),
-             x = "Genomic Position (bp)",
-             y = "Count per bin") +
+             subtitle = paste0("Motif: ", motif_pattern, " (density overlay, adjust=1.2)"),
+             x = "Genomic Position (bp)", y = "Density") +
         theme_minimal() +
         theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
               plot.subtitle = element_text(hjust = 0.5, size = 11),
               legend.position = "top") +
         scale_x_continuous(labels = scales::comma)
 
-    fN <- paste(project,"_",desc,"_",motif_pattern, "_density_overlay_both_strands.png", sep="")
+    fN <- paste(motif_pattern, "_", project,"_",desc, "_density_overlay_both_strands.png", sep="")
     ggsave(fN, p7, width = 14, height = 8, dpi = 300)
     print(p7)
 
@@ -526,7 +523,7 @@ if (total_motifs > 0 && methylated_motifs > 0) {
 
 # Save all results
 if (total_motifs > 0) {
-    fN <- paste(project,"_",desc,"_",motif_pattern, "_motif_methylation_status.txt", sep="")
+    fN <- paste(motif_pattern, "_", project,"_",desc, "_motif_methylation_status.txt", sep="")
     write.table(all_motifs,
                 fN,
                 sep = "\t",
@@ -536,7 +533,7 @@ if (total_motifs > 0) {
     # Save unmethylated motifs
     if (unmethylated_motifs > 0) {
         unmethylated <- all_motifs[!all_motifs$is_methylated, ]
-        fN <- paste(project,"_",desc,"_",motif_pattern, "_unmethylated_motifs.txt", sep="")
+        fN <- paste(motif_pattern, "_", project,"_",desc, "_unmethylated_motifs.txt", sep="")
         write.table(unmethylated,
                     fN,
                     sep = "\t",
@@ -547,7 +544,7 @@ if (total_motifs > 0) {
     # Save methylated motifs
     if (methylated_motifs > 0) {
         methylated <- all_motifs[all_motifs$is_methylated, ]
-        fN <- paste(project,"_",desc,"_",motif_pattern, "_methylated_motifs.txt", sep="")
+        fN <- paste(motif_pattern, "_", project,"_",desc, "_methylated_motifs.txt", sep="")
         write.table(methylated,
                     fN,
                     sep = "\t",
@@ -557,7 +554,7 @@ if (total_motifs > 0) {
 
     # Save sequence variant analysis
     if (exists("variant_meth")) {
-        fN <- paste(project,"_",desc,"_",motif_pattern, "_sequence_variant_analysis.txt", sep="")
+        fN <- paste(motif_pattern, "_", project,"_",desc, "_sequence_variant_analysis.txt", sep="")
         write.table(variant_meth,
                     fN,
                     sep = "\t",
@@ -567,7 +564,7 @@ if (total_motifs > 0) {
 }
 
 # Save summary report
-fN <- paste(project,"_",desc,"_",motif_pattern, "_motif_scan_summary.txt", sep="")
+fN <- paste(motif_pattern, "_", project,"_",desc, "_motif_scan_summary.txt", sep="")
 sink(fN)
 cat("===================================================\n")
 cat("FLEXIBLE MOTIF GENOME SCAN SUMMARY\n")
@@ -622,3 +619,4 @@ if (total_motifs > 0) {
     cat("Try adjusting your pattern or check your input files.\n")
 }
 cat("===================================================\n")
+
